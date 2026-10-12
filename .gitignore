@@ -1,0 +1,6 @@
+build/
+.Xil/
+*.jou
+*.log
+dfx_runtime.txt
+__pycache__/

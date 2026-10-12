@@ -1,0 +1,219 @@
+{
+  "top": "matmul_top",
+  "parameters": {
+    "ROWS": 4,
+    "COLS": 4,
+    "TILE_K": 8,
+    "MAX_M": 16,
+    "MAX_N": 16,
+    "MAX_K": 32
+  },
+  "simulation_alternative": {
+    "ROWS": 2,
+    "COLS": 3,
+    "TILE_K": 5
+  },
+  "clock_period_ns": 10,
+  "preferred_evaluation_part": "xcvu9p-flga2104-2L-e",
+  "board_confirmed": false,
+  "actual_part_artifact": "build/selected_part.txt",
+  "note": "Descriptive defaults; RTL parameters and selected_part.txt are authoritative.",
+  "optimized": 1,
+  "baseline_mode": "Set matmul_top OPTIMIZED=0; simulation includes both modes",
+  "optimizations": [
+    "synchronous scalar read pipeline II=1",
+    "cache A rows across N tiles",
+    "write P only after final K tile"
+  ],
+  "double_buffer": 1,
+  "b_load_gap": 0,
+  "double_buffer_scope": "Two B tile bank groups; prefetch during A load and RUN; A remains full-row cache",
+  "additional_stress_configs": [
+    {
+      "ROWS": 2,
+      "COLS": 3,
+      "TILE_K": 5,
+      "B_LOAD_GAP": 3
+    },
+    {
+      "ROWS": 2,
+      "COLS": 1,
+      "TILE_K": 3,
+      "B_LOAD_GAP": 0
+    }
+  ],
+  "npu": {
+    "top": "npu_top",
+    "QUEUE_DEPTH": 4,
+    "descriptor_bits": 72,
+    "opcode_gemm": 1,
+    "completion_ack_required": true,
+    "resident_shared_buffers": true,
+    "result_slots": 1,
+    "simulation_alternative": {
+      "ROWS": 2,
+      "COLS": 3,
+      "TILE_K": 5,
+      "QUEUE_DEPTH": 3
+    }
+  },
+  "w4a8": {
+    "top": "w4a8_linear",
+    "parameters": {
+      "ROWS": 4,
+      "COLS": 4,
+      "TILE_K": 8,
+      "GROUP_SIZE": 32,
+      "MAX_M": 64,
+      "MAX_N": 64,
+      "MAX_K": 4096,
+      "DOUBLE_BUFFER": 1
+    },
+    "simulation_alternative": {
+      "ROWS": 2,
+      "COLS": 3,
+      "TILE_K": 5,
+      "GROUP_SIZE": 12
+    },
+    "scale_format": "unsigned16 UQ4.12",
+    "output_format": "signed32 Q16.16",
+    "memory_model": {
+      "FIRST_DELAY": 5,
+      "BURST_BYTES": 8,
+      "BURST_GAP": 4,
+      "REQUEST_PERIOD": 5,
+      "RANDOM_SEED": "0x20261012"
+    },
+    "npu_queue_connected": false
+  },
+  "w4a8_stream": {
+    "top": "w4a8_stream",
+    "parameters": {
+      "ROWS": 4,
+      "COLS": 4,
+      "TILE_K": 8,
+      "GROUP_SIZE": 32,
+      "BUS_BYTES": 8,
+      "SCALE_ONCE": 1,
+      "DOUBLE_BUFFER": 1,
+      "MAX_M": 64,
+      "MAX_N": 64,
+      "MAX_K": 4096
+    },
+    "scope": "incremental ingress optimization; old w4a8_linear retained",
+    "scale_policy": "send only on group-end K tile",
+    "npu_queue_connected": false
+  },
+  "w4a8_packed": {
+    "top": "w4a8_packed",
+    "parameters": {
+      "ROWS": 4,
+      "COLS": 4,
+      "TILE_K": 8,
+      "GROUP_SIZE": 32,
+      "BUS_BYTES": 8,
+      "SCALE_ONCE": 1,
+      "PACK_COLS": 1,
+      "DOUBLE_BUFFER": 1,
+      "MAX_M": 64,
+      "MAX_N": 64,
+      "MAX_K": 4096
+    },
+    "weight_word_bytes": 4,
+    "weight_lanes_per_beat": 2,
+    "npu_queue_connected": false
+  },
+  "w4a8_post": {
+    "top": "w4a8_post",
+    "parameters": {
+      "ROWS": 4,
+      "COLS": 4,
+      "TILE_K": 8,
+      "GROUP_SIZE": 32,
+      "BUS_BYTES": 8,
+      "SCALE_ONCE": 1,
+      "PACK_COLS": 1,
+      "DOUBLE_BUFFER": 1,
+      "POST_OVERLAP": 1,
+      "POST_PIPELINE": 1
+    },
+    "psum_banks": 2,
+    "post_pipeline_II": 1,
+    "npu_queue_connected": false
+  },
+  "w4a8_reuse": {
+    "top": "w4a8_reuse",
+    "rows": 4,
+    "cols": 4,
+    "tile_k": 8,
+    "group_size": 32,
+    "max_m": 64,
+    "max_n": 64,
+    "max_k": 4096,
+    "bus_bytes": 8,
+    "a_reuse": true,
+    "double_buffer": true,
+    "post_overlap": true,
+    "post_pipeline": true,
+    "scale_once": true,
+    "pack_cols": true,
+    "activation_cache": {
+      "row_banks": 4,
+      "word_bits": 64,
+      "depth_words": 512,
+      "epoch": "current M tile",
+      "layout": "group / K tile / local word",
+      "style_requested": "block"
+    },
+    "part": "xcvu9p-flga2104-2L-e",
+    "part_status": "temporary device evaluation; board unspecified",
+    "clock_period_ns": 10
+  },
+  "w4a8_systolic": {
+    "top": "w4a8_systolic",
+    "parameters": {
+      "ROWS": 4,
+      "COLS": 4,
+      "TILE_K": 8,
+      "GROUP_SIZE": 32,
+      "BUS_BYTES": 8,
+      "MAX_M": 64,
+      "MAX_N": 64,
+      "MAX_K": 4096,
+      "SYSTOLIC": 1,
+      "A_REUSE": 1,
+      "DOUBLE_BUFFER": 1,
+      "POST_OVERLAP": 1,
+      "POST_PIPELINE": 1
+    },
+    "evaluated_arrays": [
+      4,
+      8
+    ],
+    "broadcast_ablation": true,
+    "drain_policy": "ROWS+COLS-2 enabled advances after each K tile",
+    "array_pause": "freeze all skew/link/acc and read progress",
+    "part": "xcvu9p-flga2104-2L-e",
+    "part_status": "temporary evaluation, board unspecified",
+    "clock_period_ns": 10
+  },
+  "w4a8_wave": {
+    "top": "w4a8_wave",
+    "rows": 4,
+    "cols": 4,
+    "tile_k": 8,
+    "group_size": 32,
+    "group_stream": true,
+    "systolic": true,
+    "arrays": [
+      4,
+      8
+    ],
+    "early_release": "after non-group-final tile injection",
+    "seam_policy": "freeze entire array during WAIT_TILE and PRIME",
+    "drain_policy": "ROWS+COLS-2 only at group end",
+    "part": "xcvu9p-flga2104-2L-e",
+    "part_status": "temporary evaluation; board unspecified",
+    "clock_period_ns": 10
+  }
+}
