@@ -60,6 +60,8 @@ python .\scripts\summarize_requant.py
 
 # 当前计算主线：group 内跨 K tile 连续脉动波前
 
+Task control/software integration: see [the interface guide](docs/w4a8_control_software.md). Run the system simulation with `powershell -ExecutionPolicy Bypass -File .\scripts\run_w4a8_system.ps1` and synthesis with `powershell -ExecutionPolicy Bypass -File .\scripts\run_synth_w4a8_system.ps1`.
+
 ## 整体项目盘点与团队分工
 
 [已完成模块、待完善项与结构空白](docs/project_status.md) · [队友工作包、接口与验收条件](docs/team_work_packages.md)
