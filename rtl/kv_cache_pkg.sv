@@ -7,7 +7,8 @@ package kv_cache_pkg;
     typedef struct packed {
         logic [31:0] config_id;
         logic [15:0] layers,heads,capacity,dimension,group_size,format_id;
-        logic [3:0][31:0] base,bytes,token_stride,head_stride,layer_stride;
+        logic [3:0][63:0] base;
+        logic [3:0][31:0] bytes,token_stride,head_stride,layer_stride;
     } kv_config_t;
     typedef struct packed {
         logic [31:0] task_id;

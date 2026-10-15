@@ -1,5 +1,5 @@
 {
-  "top": "matmul_top",
+  "top": "llm_top",
   "parameters": {
     "ROWS": 4,
     "COLS": 4,
@@ -17,7 +17,7 @@
   "preferred_evaluation_part": "xcvu9p-flga2104-2L-e",
   "board_confirmed": false,
   "actual_part_artifact": "build/selected_part.txt",
-  "note": "Descriptive defaults; RTL parameters and selected_part.txt are authoritative.",
+  "note": "Primary system parameters and sources are in system_profile.json and system_sources.txt; remaining entries retain legacy module descriptions.",
   "optimized": 1,
   "baseline_mode": "Set matmul_top OPTIMIZED=0; simulation includes both modes",
   "optimizations": [
@@ -233,5 +233,7 @@
     "validation_script": "scripts/run_team_integration.ps1",
     "unified_ffn": false,
     "attention_integrated": false
-  }
+  },
+  "legacy_int8_top": "matmul_top",
+  "system_profile": "config/system_profile.json"
 }

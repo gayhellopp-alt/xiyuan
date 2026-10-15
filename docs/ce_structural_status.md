@@ -1,5 +1,8 @@
 # C/E 结构状态：2026-10-14
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 本轮根据“先进行结构上的补全跑通”，将FFN顺序功能闭环优先于输出FIFO和tile重叠优化。当前功能自检、两配置VU9P综合/OOC、旧基线回归、失败探针及完整交付审计均已通过，实际脚本退出0。最终证据见 [ffn_validation.md](ffn_validation.md)、[ffn_delivery.json](../build/ffn_delivery.json)，未用工具运行中的中间报告替代最终结果。
 
 ## 当前闭环

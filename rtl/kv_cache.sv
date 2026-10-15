@@ -1,6 +1,6 @@
 // Storage-side KV manager. No attention arithmetic, quantization or unified scheduler.
 module kv_cache #(
-    parameter integer GROUP_SIZE=32,MAX_LAYERS=4,MAX_HEADS=8,MAX_TOKENS=4096,MAX_DIM=128
+    parameter integer ADDR_WIDTH=32,GROUP_SIZE=32,MAX_LAYERS=4,MAX_HEADS=8,MAX_TOKENS=4096,MAX_DIM=128
 )(
     input logic clk,rst,
     input logic cfg_valid,output logic cfg_ready,input kv_cache_pkg::kv_config_t cfg_desc,
@@ -11,10 +11,10 @@ module kv_cache #(
     output logic [31:0] completion_id,output logic [3:0] completion_status,
     output logic configured,
     input logic [15:0] query_layer,query_head,output logic query_valid,output logic [15:0] query_length,
-    output logic arvalid,input logic arready,output logic [31:0] araddr,
+    output logic arvalid,input logic arready,output logic [ADDR_WIDTH-1:0] araddr,
     output wire [3:0] arid,output wire [7:0] arlen,output wire [2:0] arsize,output wire [1:0] arburst,
     input logic rvalid,output logic rready,input logic [63:0] rdata,input logic [3:0] rid,input logic [1:0] rresp,input logic rlast,
-    output logic awvalid,input logic awready,output logic [31:0] awaddr,
+    output logic awvalid,input logic awready,output logic [ADDR_WIDTH-1:0] awaddr,
     output wire [3:0] awid,output wire [7:0] awlen,output wire [2:0] awsize,output wire [1:0] awburst,
     output logic wvalid,input logic wready,output logic [63:0] wdata,output logic [7:0] wstrb,output wire wlast,
     input logic bvalid,output logic bready,input logic [3:0] bid,input logic [1:0] bresp,
@@ -30,7 +30,7 @@ module kv_cache #(
     logic cfg_legal,address_legal,command_legal;
     logic [15:0] committed,token_cursor,byte_cursor;
     logic [1:0] plane_cursor;
-    logic [31:0] address,width,total_bytes,sent,acks,received;
+    logic [ADDR_WIDTH-1:0] address;logic [31:0] width,total_bytes,sent,acks,received;
     logic rd_cmd_valid,rd_cmd_ready,rd_rsp_valid,rd_rsp_ready,rd_error,rd_idle;
     logic [7:0] rd_data;
     logic wr_cmd_valid,wr_cmd_ready,wr_ack_valid,wr_error,wr_idle;
@@ -39,7 +39,7 @@ module kv_cache #(
             MAX_HEADS>64 || MAX_TOKENS<1 || MAX_TOKENS>4096 || MAX_DIM<1 || MAX_DIM>4096)
             $fatal(1,"Unsupported KV hardware parameters");
     end
-    kv_cache_address #(.GROUP_SIZE(GROUP_SIZE),.MAX_LAYERS(MAX_LAYERS),.MAX_HEADS(MAX_HEADS),.MAX_TOKENS(MAX_TOKENS),.MAX_DIM(MAX_DIM)) layout(
+    kv_cache_address #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_LAYERS(MAX_LAYERS),.MAX_HEADS(MAX_HEADS),.MAX_TOKENS(MAX_TOKENS),.MAX_DIM(MAX_DIM)) layout(
         .cfg(cfg),.plane(plane_cursor),.layer(command.layer),.head(command.head),.token(token_cursor),.offset(byte_cursor),
         .config_legal(cfg_legal),.access_legal(address_legal),.address(address));
     always_comb begin
@@ -72,11 +72,11 @@ module kv_cache #(
     assign read_valid=state==READ_RESPONSE && rd_rsp_valid && !rd_error && !rst;
     assign read_data=rd_data;
     assign read_last=received+1==total_bytes;
-    w4a8_axi_read reader(.clk(clk),.rst(rst),.cmd_valid(rd_cmd_valid),.cmd_ready(rd_cmd_ready),.cmd_addr(address),
+    w4a8_axi_read #(.ADDR_WIDTH(ADDR_WIDTH)) reader(.clk(clk),.rst(rst),.cmd_valid(rd_cmd_valid),.cmd_ready(rd_cmd_ready),.cmd_addr(address),
         .rsp_valid(rd_rsp_valid),.rsp_ready(rd_rsp_ready),.rsp_data(rd_data),.rsp_error(rd_error),.idle(rd_idle),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),.arid(arid),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .rvalid(rvalid),.rready(rready),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast));
-    storage_axi_byte_write writer(.clk(clk),.rst(rst),.cmd_valid(wr_cmd_valid),.cmd_ready(wr_cmd_ready),.cmd_addr(address),.cmd_data(append_data),
+    storage_axi_byte_write #(.ADDR_WIDTH(ADDR_WIDTH)) writer(.clk(clk),.rst(rst),.cmd_valid(wr_cmd_valid),.cmd_ready(wr_cmd_ready),.cmd_addr(address),.cmd_data(append_data),
         .ack_valid(wr_ack_valid),.ack_error(wr_error),.idle(wr_idle),
         .awvalid(awvalid),.awready(awready),.awaddr(awaddr),.awid(awid),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),.wlast(wlast),

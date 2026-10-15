@@ -1,4 +1,4 @@
-"""Host-side checks for w4a8_team_top's bounded 32-bit AXI interface."""
+"""Host-side checks for w4a8_team_top's bounded 32/64-bit AXI interfaces."""
 from dataclasses import asdict, dataclass
 from .w4a8_task import W4A8Task
 
@@ -32,7 +32,9 @@ class W4A8MemoryTask:
     def n(self):
         return self.descriptor.n
 
-    def validate(self, *, max_m=64, max_n=64, max_k=4096, group_size=32):
+    def validate(self, *, max_m=64, max_n=64, max_k=4096, group_size=32, addr_width=32):
+        if addr_width not in (32, 64):
+            raise ValueError('address width must be 32 or 64')
         d = self.descriptor.validate(max_m=max_m, max_n=max_n, max_k=max_k, group_size=group_size)
         groups = (d.k + group_size - 1) // group_size
         if d.sx_stride % 2 or d.sw_stride % 2 or d.y_stride % 4:
@@ -49,8 +51,8 @@ class W4A8MemoryTask:
         for base, size, extent in regions:
             if not isinstance(size, int) or not 0 < size < 1 << 32 or extent > size:
                 raise ValueError('allocation capacity does not contain tensor extent')
-            if base >= 1 << 32 or base + size > 1 << 32:
-                raise ValueError('allocation outside 32-bit AXI address space')
+            if base >= 1 << addr_width or base + size > 1 << addr_width:
+                raise ValueError('allocation outside configured AXI address space')
         y, size, _ = regions[-1]
         if any(y < base + count and base < y + size for base, count, _ in regions[:-1]):
             raise ValueError('output allocation overlaps an input allocation')

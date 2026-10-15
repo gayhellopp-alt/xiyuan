@@ -1,5 +1,8 @@
 # 三人协作分工与近期目标
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 > 2026-10-15 三人工作已整合：A/D 最新控制与软件、B/F 存储/KV、主目录 C/E 更新已汇入本地整合分支。新增统一 AXI 单层入口与完整回归脚本，七类回归全部通过。完整 FFN/Attention 任务图仍待对接；旧段落为原阶段记录。见[三人整合说明](team_integration.md)。
 
 2026-10-14 C/E 接续更新：外部/动态requant、两层TB及可综合FFN中间通路与三投影功能自检已实现。当前接入合同见 [FFN接口](ffn_interface.md)、[数值合同](ffn_numerics.md) 与 [结构状态](ce_structural_status.md)，最终器件结果见各实际验证报告。下面分工和验收边界保持；“requant尚待实现”等原首轮状态为历史快照，不代表当前C/E状态。统一任务/软件由A/D维护，packet存储和写确认由B/F维护，当前完整FFN阶段调度/供数是TB验证。

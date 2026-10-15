@@ -1,5 +1,8 @@
 # 两层线性 / 小型 FFN：存储侧依赖与工作区
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 本轮检查本地及 GitHub main，均为 `2e56af8bbee1fe6e806217e6f729a4984d8cb262`。原 B 工作包未提交代码及实际验证完整保留。当前仓库未提供负责人 requant/SiLU/SwiGLU 模块，也未提供队友1公共任务合同。因此本轮实现 `rtl/w4a8_tensor_dependency.sv`，独立验证工作区校验、任务依赖和占用期；**没有用自行编写的 quantizer 或占位计算替代负责人的模块，没有完成两层数值闭环或 FFN 数值集成。**
 
 ## 1. 数据流及地址

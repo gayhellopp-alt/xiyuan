@@ -1,6 +1,6 @@
 // Original implementation: finite gather/repack, not the TB reuse memory.
 module w4a8_memory_packet #(
-    parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32
+    parameter integer ADDR_WIDTH=32,ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32
 )(
     input logic clk,rst,enable,abort_task,
     input w4a8_memory_pkg::memory_task_t desc,
@@ -9,7 +9,7 @@ module w4a8_memory_packet #(
     input logic req_scale,req_activation,
     output logic in_valid,input logic in_ready,output logic [63:0] in_data,
     output logic [7:0] in_keep,output logic fault,output logic idle,
-    output logic rd_valid,input logic rd_ready,output logic [31:0] rd_addr,
+    output logic rd_valid,input logic rd_ready,output logic [ADDR_WIDTH-1:0] rd_addr,
     input logic rsp_valid,output logic rsp_ready,input logic [7:0] rsp_data,
     input logic rsp_error,output logic read_fault,
     output logic [3:0] buffer_used
@@ -21,8 +21,8 @@ module w4a8_memory_packet #(
     logic [1:0] phase;
     logic [3:0] slot;
     logic byte_valid;
-    logic [63:0] address_wide,limit_wide;
-    logic [31:0] region_base,region_bytes;
+    logic [64:0] address_wide,limit_wide;
+    logic [63:0] region_base;logic [31:0] region_bytes;
     logic [16:0] span;
     always_comb begin
         case(phase)
@@ -36,30 +36,30 @@ module w4a8_memory_packet #(
             0:begin
                 byte_valid=lane+16'(slot/4)<nl && 17'(pos)+17'(slot%4)<span;
                 region_base=desc.w_base;region_bytes=desc.w_bytes;
-                address_wide=64'(desc.w_base)+(64'(rn)+64'(lane)+64'(slot/4))*64'(desc.w_stride)+64'(rk/2)+64'(pos)+64'(slot%4);
+                address_wide=65'(desc.w_base)+(65'(rn)+65'(lane)+65'(slot/4))*65'(desc.w_stride)+65'(rk/2)+65'(pos)+65'(slot%4);
             end
             1:begin
                 byte_valid=17'(pos)+17'(slot)<span;
                 region_base=desc.a_base;region_bytes=desc.a_bytes;
-                address_wide=64'(desc.a_base)+(64'(rm)+64'(lane))*64'(desc.a_stride)+64'(rk)+64'(pos)+64'(slot);
+                address_wide=65'(desc.a_base)+(65'(rm)+65'(lane))*65'(desc.a_stride)+65'(rk)+65'(pos)+65'(slot);
             end
             2:begin
                 byte_valid=17'(pos)+17'(slot)<span;
                 region_base=desc.sx_base;region_bytes=desc.sx_bytes;
-                address_wide=64'(desc.sx_base)+(64'(rm)+(64'(pos)+64'(slot))/2)*64'(desc.sx_stride)+2*64'(rg)+(64'(pos)+64'(slot))%2;
+                address_wide=65'(desc.sx_base)+(65'(rm)+(65'(pos)+65'(slot))/2)*65'(desc.sx_stride)+2*65'(rg)+(65'(pos)+65'(slot))%2;
             end
             3:begin
                 byte_valid=17'(pos)+17'(slot)<span;
                 region_base=desc.sw_base;region_bytes=desc.sw_bytes;
-                address_wide=64'(desc.sw_base)+64'(rg)*64'(desc.sw_stride)+2*64'(rn)+64'(pos)+64'(slot);
+                address_wide=65'(desc.sw_base)+65'(rg)*65'(desc.sw_stride)+2*65'(rn)+65'(pos)+65'(slot);
             end
         endcase
-        limit_wide=64'(region_base)+64'(region_bytes);
+        limit_wide=65'(region_base)+65'(region_bytes);
     end
     assign idle=state==EMPTY;
     assign req_ready=idle && enable && !rst && !abort_task;
     assign rd_valid=state==FETCH && !abort_task && !rst;
-    assign rd_addr=address_wide[31:0];
+    assign rd_addr=address_wide[ADDR_WIDTH-1:0];
     assign rsp_ready=(state==RETURN_BYTE || abort_task) && !rst;
     assign in_valid=state==SEND && !abort_task && !rst;
     always_comb begin
@@ -86,7 +86,7 @@ module w4a8_memory_packet #(
             end
             BUILD:if(slot==8) state<=SEND;
                 else if(!byte_valid) slot<=slot+1;
-                else if(address_wide<64'(region_base) || address_wide>=limit_wide || address_wide>=64'h1_0000_0000) begin
+                else if(address_wide<65'(region_base) || address_wide>=limit_wide || address_wide>=(65'd1<<ADDR_WIDTH)) begin
                     fault<=1;state<=STOP;
                 end else state<=FETCH;
             FETCH:if(rd_ready) state<=RETURN_BYTE;

@@ -1,5 +1,8 @@
 # W4A8 control and software interface
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 This first system wrapper accepts one task at a time and connects the validated `w4a8_stream` core to an external memory adapter. The adapter owns actual memory reads and writes; this block supplies stable task metadata, forwards tile requests and packets, and waits for each output write acknowledgement before allowing the next output.
 
 ## Descriptor

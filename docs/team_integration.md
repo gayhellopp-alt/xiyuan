@@ -1,5 +1,8 @@
 # 三人工作整合记录（2026-10-15）
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 本地整合目录：`E:\speed-up`。本轮把 A/D、B/F、C/E 的源码汇入同一项目，并增加可运行的单层 W4A8 AXI 系统入口。完整 FFN/Attention 的统一任务图尚未实现，不能把模块汇入等同于整条 Transformer 链路完成。
 
 ## 来源与保护措施

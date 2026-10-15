@@ -1,5 +1,8 @@
 # 工作包 B：存储侧接口 v1
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 本实现独立于控制顶层，新增 `w4a8_memory_bridge`，不修改 `w4a8_wave`、数值路径、阵列或 `npu_top`。源码基线为 main `2e56af8bbee1fe6e806217e6f729a4984d8cb262`。该版本未提供队友1的公共 W4A8 描述符，故提供最小存储侧合同 `w4a8_memory_pkg::memory_task_t`，由控制 owner 映射其软件格式，不把这个 packed struct 当作主机 ABI。
 
 ## 1. 接入合同

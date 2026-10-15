@@ -1,5 +1,5 @@
 module w4a8_memory_validate #(
-    parameter integer GROUP_SIZE=32,MAX_M=64,MAX_N=64,MAX_K=4096
+    parameter integer ADDR_WIDTH=32,GROUP_SIZE=32,MAX_M=64,MAX_N=64,MAX_K=4096
 )(
     input w4a8_memory_pkg::memory_task_t desc,
     output logic legal
@@ -21,9 +21,9 @@ module w4a8_memory_validate #(
             64'(desc.sw_stride)>=2*64'(desc.n) && 64'(desc.y_stride)>=4*64'(desc.n) &&
             desc.sx_base[0]==0 && desc.sw_base[0]==0 && desc.sx_stride[0]==0 &&
             desc.sw_stride[0]==0 && desc.y_base[1:0]==0 && desc.y_stride[1:0]==0 &&
-            region_ok(desc.a_base,desc.a_bytes,ae) && region_ok(desc.w_base,desc.w_bytes,we) &&
-            region_ok(desc.sx_base,desc.sx_bytes,se) && region_ok(desc.sw_base,desc.sw_bytes,te) &&
-            region_ok(desc.y_base,desc.y_bytes,ye) &&
+            region_ok(desc.a_base,desc.a_bytes,ae,ADDR_WIDTH) && region_ok(desc.w_base,desc.w_bytes,we,ADDR_WIDTH) &&
+            region_ok(desc.sx_base,desc.sx_bytes,se,ADDR_WIDTH) && region_ok(desc.sw_base,desc.sw_bytes,te,ADDR_WIDTH) &&
+            region_ok(desc.y_base,desc.y_bytes,ye,ADDR_WIDTH) &&
             !overlaps(desc.y_base,desc.y_bytes,desc.a_base,desc.a_bytes) &&
             !overlaps(desc.y_base,desc.y_bytes,desc.w_base,desc.w_bytes) &&
             !overlaps(desc.y_base,desc.y_bytes,desc.sx_base,desc.sx_bytes) &&

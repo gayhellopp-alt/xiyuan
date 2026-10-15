@@ -1,5 +1,8 @@
 # 队友2后续存储交付：实际验证
 
+> 当前统一系统为 ABI v2、`llm_top`：64 位地址、真实外存 FFN、KV 与有界 Attention。本文保留原阶段/兼容接口的记录；当前系统边界与验证请见[系统架构](system_architecture.md)和[系统验证](system_validation.md)。
+
+
 日期2026-10-14，Asia/Shanghai。继续使用本地main `2e56af8bbee1fe6e806217e6f729a4984d8cb262`，只读GitHub API查询main最新SHA相同。适用祖先及项目目录未发现AGENTS.md。已核对团队/状态文档、原B接口与验证报告、最新RTL/model文件及未提交修改；保留此前B工作，没有拉取覆盖、重置工作文件、提交、推送或合并。
 
 实际状态：B模块存在于本地未提交工作，四配置源码哈希审计有效；历史project_status描述的“尚无可综合传输”不用于判断当前本地B状态。负责人requant/SiLU/SwiGLU、队友1公共W4A8任务格式、动态QKᵀ/AV、mask/Softmax及Attention软件参考均未出现在当前checkout/main。因此交付下表范围，不声称两层数值、FFN或Attention集成完成。

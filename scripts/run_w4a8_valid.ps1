@@ -72,7 +72,7 @@ try {
         foreach($kind in @('negative','timeout')){
             $switch=if($kind -eq 'negative'){'-CorruptExpected'}else{'-TimeoutProbe'}
             $out=Join-Path $root ('build\valid_'+$kind+'.stdout.log');$err=Join-Path $root ('build\valid_'+$kind+'.stderr.log')
-            $p=Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSCommandPath+'"'),'-ProbeChild','-Simulation','v4',$switch,'-VivadoBin',('"'+$VivadoBin+'"')) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $p=Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSCommandPath+'"'),'-ProbeChild','-Simulation','v4',$switch,'-VivadoBin',('"'+$VivadoBin+'"')) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
             Set-Content -Encoding ascii (Join-Path $root ('build\sim_w4a8_valid_v4_'+$kind+'\observed_exit_code.txt')) $p.ExitCode
             $marker=if($kind -eq 'negative'){'W4A8_VALID_CHECK_FAILED'}else{'W4A8_VALID_GLOBAL_TIMEOUT'}
             if($p.ExitCode -eq 0 -or (Get-Content -Raw $out) -notmatch $marker){throw 'Valid-slot expected failure missing'}
@@ -95,7 +95,7 @@ try {
     }
     if($Regression){
         foreach($entry in @('run_w4a8_wave.ps1','run_dynamic.ps1')){
-            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root ('scripts\'+$entry)) -VivadoBin $VivadoBin -Python $Python
+            & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root ('scripts\'+$entry)) -VivadoBin $VivadoBin -Python $Python
             if($LASTEXITCODE -ne 0){throw "Regression failed: $entry"}
         }
     }

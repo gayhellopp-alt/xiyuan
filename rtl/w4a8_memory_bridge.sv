@@ -1,6 +1,6 @@
 // Storage-side adapter only. Connect core_reset OR system reset to w4a8_wave.
 module w4a8_memory_bridge #(
-    parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
+    parameter integer ADDR_WIDTH=32,ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
     parameter integer MAX_M=64,MAX_N=64,MAX_K=4096
 )(
     input logic clk,rst,
@@ -15,11 +15,11 @@ module w4a8_memory_bridge #(
     output logic in_valid,input logic in_ready,output logic [63:0] in_data,output logic [7:0] in_keep,
     input logic out_valid,output logic out_ready,input logic [15:0] out_m,out_n,
     input logic out_last,input logic signed [31:0] out_data,
-    output logic arvalid,input logic arready,output logic [31:0] araddr,
+    output logic arvalid,input logic arready,output logic [ADDR_WIDTH-1:0] araddr,
     output wire [3:0] arid,output wire [7:0] arlen,output wire [2:0] arsize,output wire [1:0] arburst,
     input logic rvalid,output logic rready,input logic [63:0] rdata,
     input logic [3:0] rid,input logic [1:0] rresp,input logic rlast,
-    output logic awvalid,input logic awready,output logic [31:0] awaddr,
+    output logic awvalid,input logic awready,output logic [ADDR_WIDTH-1:0] awaddr,
     output wire [3:0] awid,output wire [7:0] awlen,output wire [2:0] awsize,output wire [1:0] awburst,
     output logic wvalid,input logic wready,output logic [63:0] wdata,
     output logic [7:0] wstrb,output wire wlast,
@@ -40,12 +40,12 @@ module w4a8_memory_bridge #(
     memory_task_t desc;
     logic legal,packet_fault,read_fault,packet_idle,rd_idle,wr_idle;
     logic rd_valid,rd_ready,rsp_valid,rsp_ready,rsp_error;
-    logic [31:0] rd_addr;
+    logic [ADDR_WIDTH-1:0] rd_addr;
     logic [7:0] rsp_data;
     logic ack_valid,ack_error,wr_cmd_valid,wr_cmd_ready;
     logic done_seen,last_seen;
     logic [31:0] outputs,acks;
-    logic [63:0] y_address;
+    logic [64:0] y_address;
     logic output_legal;
     logic [3:0] buffer_used;
     wire abort_task=state==FAIL_DRAIN;
@@ -56,14 +56,14 @@ module w4a8_memory_bridge #(
     assign core_reset=rst || state==IDLE || state==CHECK || state==FAIL_DRAIN || state==COMPLETE;
     assign core_start=state==LAUNCH && core_start_ready && !rst;
     assign cfg_m=desc.m;assign cfg_n=desc.n;assign cfg_k=desc.k;
-    assign y_address=64'(desc.y_base)+64'(out_m)*64'(desc.y_stride)+4*64'(out_n);
+    assign y_address=65'(desc.y_base)+65'(out_m)*65'(desc.y_stride)+4*65'(out_n);
     assign output_legal=out_m<desc.m && out_n<desc.n && outputs<32'(desc.m)*32'(desc.n) &&
-        y_address+4<=64'(desc.y_base)+64'(desc.y_bytes) &&
+        y_address+4<=65'(desc.y_base)+65'(desc.y_bytes) &&
         (!out_last || outputs+1==32'(desc.m)*32'(desc.n));
     assign out_ready=state==RUN && wr_cmd_ready && !rst;
     assign wr_cmd_valid=state==RUN && out_valid && output_legal && !rst;
-    w4a8_memory_validate #(.GROUP_SIZE(GROUP_SIZE),.MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) validate(.desc(desc),.legal(legal));
-    w4a8_memory_packet #(.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE)) packet(
+    w4a8_memory_validate #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) validate(.desc(desc),.legal(legal));
+    w4a8_memory_packet #(.ADDR_WIDTH(ADDR_WIDTH),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE)) packet(
         .clk(clk),.rst(local_reset),.enable(state==RUN),.abort_task(abort_task),.desc(desc),
         .req_valid(req_valid),.req_ready(req_ready),.req_m(req_m),.req_n(req_n),.req_k(req_k),
         .req_ml(req_ml),.req_nl(req_nl),.req_kl(req_kl),.req_group(req_group),
@@ -72,12 +72,12 @@ module w4a8_memory_bridge #(
         .fault(packet_fault),.idle(packet_idle),.read_fault(read_fault),.buffer_used(buffer_used),
         .rd_valid(rd_valid),.rd_ready(rd_ready),.rd_addr(rd_addr),.rsp_valid(rsp_valid),
         .rsp_ready(rsp_ready),.rsp_data(rsp_data),.rsp_error(rsp_error));
-    w4a8_axi_read reader(.clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(rd_addr),
+    w4a8_axi_read #(.ADDR_WIDTH(ADDR_WIDTH)) reader(.clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(rd_addr),
         .rsp_valid(rsp_valid),.rsp_ready(rsp_ready),.rsp_data(rsp_data),.rsp_error(rsp_error),.idle(rd_idle),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),.arid(arid),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .rvalid(rvalid),.rready(rready),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast));
-    w4a8_axi_write writer(.clk(clk),.rst(local_reset),.cmd_valid(wr_cmd_valid),.cmd_ready(wr_cmd_ready),
-        .cmd_addr(y_address[31:0]),.cmd_data(out_data),.ack_valid(ack_valid),.ack_error(ack_error),.idle(wr_idle),
+    w4a8_axi_write #(.ADDR_WIDTH(ADDR_WIDTH)) writer(.clk(clk),.rst(local_reset),.cmd_valid(wr_cmd_valid),.cmd_ready(wr_cmd_ready),
+        .cmd_addr(y_address[ADDR_WIDTH-1:0]),.cmd_data(out_data),.ack_valid(ack_valid),.ack_error(ack_error),.idle(wr_idle),
         .awvalid(awvalid),.awready(awready),.awaddr(awaddr),.awid(awid),.awlen(awlen),.awsize(awsize),.awburst(awburst),
         .wvalid(wvalid),.wready(wready),.wdata(wdata),.wstrb(wstrb),.wlast(wlast),
         .bvalid(bvalid),.bready(bready),.bid(bid),.bresp(bresp));

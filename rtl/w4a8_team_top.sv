@@ -1,7 +1,7 @@
 // Unified host task -> bounded AXI storage -> C/E wave core -> B-response fence.
 // Original A/D packet top and all C/E arithmetic modules remain available.
 module w4a8_team_top #(
-    parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
+    parameter integer ADDR_WIDTH=32,ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
     parameter integer MAX_M=64,MAX_N=64,MAX_K=4096
 )(
     input logic clk,rst,load_pause,post_pause,array_pause,
@@ -10,11 +10,11 @@ module w4a8_team_top #(
     output logic completion_valid,input logic completion_ready,
     output logic [31:0] completion_task_id,output logic [7:0] completion_status,
     output logic result_available,output logic [31:0] elapsed_cycles,
-    output logic arvalid,input logic arready,output logic [31:0] araddr,
+    output logic arvalid,input logic arready,output logic [ADDR_WIDTH-1:0] araddr,
     output wire [3:0] arid,output wire [7:0] arlen,output wire [2:0] arsize,output wire [1:0] arburst,
     input logic rvalid,output logic rready,input logic [63:0] rdata,
     input logic [3:0] rid,input logic [1:0] rresp,input logic rlast,
-    output logic awvalid,input logic awready,output logic [31:0] awaddr,
+    output logic awvalid,input logic awready,output logic [ADDR_WIDTH-1:0] awaddr,
     output wire [3:0] awid,output wire [7:0] awlen,output wire [2:0] awsize,output wire [1:0] awburst,
     output logic wvalid,input logic wready,output logic [63:0] wdata,
     output logic [7:0] wstrb,output wire wlast,
@@ -37,7 +37,7 @@ module w4a8_team_top #(
     logic [15:0] req_m,req_n,req_k,req_ml,req_nl,req_kl,req_group;
     logic in_valid,in_ready;logic [63:0] in_data;logic [7:0] in_keep;
     logic out_valid,out_ready,out_last;logic [15:0] out_m,out_n;logic signed [31:0] out_data;
-    w4a8_task_adapter #(.GROUP_SIZE(GROUP_SIZE),.MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) adapter(
+    w4a8_task_adapter #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) adapter(
         .host_desc(active),.a_bytes(saved_a),.w_bytes(saved_w),.sx_bytes(saved_sx),
         .sw_bytes(saved_sw),.y_bytes(saved_y),.memory_desc(memory_desc),.status(adapter_status));
     assign task_ready=state==IDLE && !rst;
@@ -77,7 +77,7 @@ module w4a8_team_top #(
             endcase
         end
     end
-    w4a8_memory_bridge #(.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE),
+    w4a8_memory_bridge #(.ADDR_WIDTH(ADDR_WIDTH),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE),
         .MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) bridge(
         .clk(clk),.rst(rst),.task_valid(bridge_task_valid),.task_ready(bridge_task_ready),.task_desc(memory_desc),
         .completion_valid(bridge_completion_valid),.completion_ready(bridge_completion_ready),

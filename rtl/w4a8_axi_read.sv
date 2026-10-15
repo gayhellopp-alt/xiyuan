@@ -1,11 +1,11 @@
 // One reserved byte response slot, one AXI transaction, fixed ID=0.
 // Single-beat INCR, ARSIZE=0. Never aligns down or reads padding.
-module w4a8_axi_read(
+module w4a8_axi_read #(parameter integer ADDR_WIDTH=32)(
     input logic clk,rst,
-    input logic cmd_valid, output logic cmd_ready, input logic [31:0] cmd_addr,
+    input logic cmd_valid, output logic cmd_ready, input logic [ADDR_WIDTH-1:0] cmd_addr,
     output logic rsp_valid, input logic rsp_ready,
     output logic [7:0] rsp_data, output logic rsp_error, output logic idle,
-    output logic arvalid,input logic arready,output logic [31:0] araddr,
+    output logic arvalid,input logic arready,output logic [ADDR_WIDTH-1:0] araddr,
     output wire [3:0] arid,output wire [7:0] arlen,output wire [2:0] arsize,
     output wire [1:0] arburst,
     input logic rvalid,output logic rready,input logic [63:0] rdata,

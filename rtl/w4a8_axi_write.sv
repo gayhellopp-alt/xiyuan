@@ -1,9 +1,9 @@
 // One signed32 result slot. AW and W may complete in either order.
-module w4a8_axi_write(
+module w4a8_axi_write #(parameter integer ADDR_WIDTH=32)(
     input logic clk,rst,
-    input logic cmd_valid,output logic cmd_ready,input logic [31:0] cmd_addr,cmd_data,
+    input logic cmd_valid,output logic cmd_ready,input logic [ADDR_WIDTH-1:0] cmd_addr,input logic [31:0] cmd_data,
     output logic ack_valid,ack_error,output logic idle,
-    output logic awvalid,input logic awready,output logic [31:0] awaddr,
+    output logic awvalid,input logic awready,output logic [ADDR_WIDTH-1:0] awaddr,
     output wire [3:0] awid,output wire [7:0] awlen,output wire [2:0] awsize,
     output wire [1:0] awburst,
     output logic wvalid,input logic wready,output logic [63:0] wdata,

@@ -60,7 +60,7 @@ try {
         foreach($probeSpec in @(@('unit','negative'),@('ffn32','negative'),@('ffn32','timeout'))){
             $sim=$probeSpec[0];$kind=$probeSpec[1];$switch=if($kind -eq 'negative'){'-CorruptExpected'}else{'-TimeoutProbe'}
             $out=Join-Path $root ('build\ffn_'+$sim+'_'+$kind+'.stdout.log');$err=Join-Path $root ('build\ffn_'+$sim+'_'+$kind+'.stderr.log')
-            $p=Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSCommandPath+'"'),'-ProbeChild','-Simulation',$sim,$switch,'-VivadoBin',('"'+$VivadoBin+'"')) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+            $p=Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSCommandPath+'"'),'-ProbeChild','-Simulation',$sim,$switch,'-VivadoBin',('"'+$VivadoBin+'"')) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
             Set-Content -Encoding ascii (Join-Path $root ('build\sim_ffn_'+$sim+'_'+$kind+'\observed_exit_code.txt')) $p.ExitCode
             $marker=if($kind -eq 'negative'){'CHECK_FAILED'}else{'FFN_TIMEOUT'}
             if($p.ExitCode -eq 0 -or (Get-Content -Raw $out) -notmatch $marker){throw 'FFN failure probe missing'}
@@ -82,7 +82,7 @@ try {
         }
     }
     if($Regression){
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts\run_dynamic.ps1') -Regression -VivadoBin $VivadoBin -Python $Python
+        & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts\run_dynamic.ps1') -Regression -VivadoBin $VivadoBin -Python $Python
         if($LASTEXITCODE -ne 0){throw 'FFN baseline regression failed'}
     }
     if(!$ProbeChild -and $Simulation -eq 'all'){

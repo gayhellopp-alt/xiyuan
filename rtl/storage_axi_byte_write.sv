@@ -1,9 +1,9 @@
 // Single-byte AXI write slot. Unlike the W4A8 output writer, no alignment/padding is needed.
-module storage_axi_byte_write(
+module storage_axi_byte_write #(parameter integer ADDR_WIDTH=32)(
     input logic clk,rst,
-    input logic cmd_valid,output logic cmd_ready,input logic [31:0] cmd_addr,input logic [7:0] cmd_data,
+    input logic cmd_valid,output logic cmd_ready,input logic [ADDR_WIDTH-1:0] cmd_addr,input logic [7:0] cmd_data,
     output logic ack_valid,ack_error,idle,
-    output logic awvalid,input logic awready,output logic [31:0] awaddr,
+    output logic awvalid,input logic awready,output logic [ADDR_WIDTH-1:0] awaddr,
     output wire [3:0] awid,output wire [7:0] awlen,output wire [2:0] awsize,output wire [1:0] awburst,
     output logic wvalid,input logic wready,output logic [63:0] wdata,output logic [7:0] wstrb,output wire wlast,
     input logic bvalid,output logic bready,input logic [3:0] bid,input logic [1:0] bresp
