@@ -1,4 +1,64 @@
-# 当前增量：group 内跨 K tile 连续脉动波前
+# 当前 C/E：先跑通小型 FFN 结构
+
+新增可综合 `ffn_bridge`：两个有限同步RAM按坐标组装gate/up，执行Q16.16 SiLU近似与逐元素乘法，再按down的row/K-group进行动态requant，输出INT8 qx及UQ4.12 sx。原W4A8投影和requant/dynamic数值保留；完整gate/up→SiLU×up→requant→down通过三投影TB逐阶段自检，group32/12各18完整任务及8阶段复位恢复。最终四配置自检/探针、两配置VU9P综合/OOC、原requant/dynamic/W4A8回归与完整交付审计均退出0。
+
+```powershell
+# 完整重现：参考、四配置自检、失败探针、两配置VU9P综合/OOC、旧基线回归
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ffn.ps1 -Implement -Regression
+
+# 独立完整功能自检及探针，不依赖器件流程已完成
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ffn.ps1 -SimOnly
+
+# 已有功能产物后仅跑器件/回归；或仅审计
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ffn.ps1 -SynthOnly -Implement -Regression
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_ffn.ps1 -AuditOnly
+```
+
+[结构状态与后续缺口](docs/ce_structural_status.md) · [FFN数值](docs/ffn_numerics.md) · [输入/输出与团队接入](docs/ffn_interface.md) · [实际验证](docs/ffn_validation.md) · [接续记录](docs/session_handoff_ce_ffn.md)
+
+完整三投影的packet供数/回填与阶段调度是有限TB适配；本轮新增综合顶层为ffn_bridge，统一任务系统/外存写回仍由队友集成。输出FIFO、tile重叠和完整Transformer其余算子为后续工作。
+
+有效槽独立变体 `w4a8_valid` 保留原接口/数值，八配置自检、4×4/8×8 VU9P综合/OOC及原基线回归已完整退出0；FFN功能基线使用原w4a8_wave。入口 `run_w4a8_valid.ps1 -Implement -Regression`，文档 [有效槽架构](docs/w4a8_valid_architecture.md)、[验证](docs/w4a8_valid_validation.md)、[性能对照](docs/w4a8_valid_performance.md)、[收尾接续](docs/session_handoff_ce_valid.md)。
+
+# 历史提示词2：动态 scale 与两层 W4A8 验证
+
+新增独立 `requant_dynamic`：有限同步group Buffer收集Q16.16、absmax、非零UQ4.12 scale编码、复用已验证scalar量化。超过scale范围时钳位并报告scale_clipped及独立饱和状态。两层TB按第一层tile输出坐标写入512×32同步适配存储，再按第二层row/K-group读出，分别验证qx/sx及第二层独立sw；原W4A8和外部scale基线保留。
+
+~~~powershell
+# 四配置自检/两层复位恢复、失败非零探针、两配置VU9P综合/OOC、旧requant与W4A8回归
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_dynamic.ps1 -Implement -Regression
+
+# 重新运行四配置与探针；或仅审计已有产物
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_dynamic.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_dynamic.ps1 -AuditOnly
+~~~
+
+[动态数值合同](docs/dynamic_numerics.md) · [接口/Buffer/两层边界](docs/dynamic_interface.md) · [实际验证与误差](docs/dynamic_validation.md) · [下一轮接续](docs/session_handoff_ce_dynamic.md)
+
+两层适配属于TB验证，本轮综合顶层为requant_dynamic；没有宣称统一两层DMA/任务系统已综合。FFN、有效槽压缩和输出tile流水尚未实现。下面保留外部scale基线与历史计算主线入口。
+
+# 外部 scale 层间 requant 基线
+
+新增独立 `requant_group`：signed32 Q16.16 → signed8 INT8，外部非零 unsigned16 UQ4.12 scale，最近/tie远离零舍入与饱和；单活动 row/K-group、有效尾长度、标签/scale/握手、错误和饱和状态。原 W4A8 RTL/数值/接口保留。
+
+~~~powershell
+# 实际参考、自检、错误/超时非零探针、两配置 VU9P 综合/OOC和原W4A8八配置回归
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_requant.ps1 -Implement -Regression
+
+# 仅重新仿真与探针；审计当前已有EDA（如存在）
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_requant.ps1
+
+# 只审计已有产物，不当作新功能仿真
+python .\scripts\summarize_requant.py
+~~~
+
+已实际通过798组/10062输出，最小输出接受延迟34拍、同组输入II35拍；group32/12综合分别258/282 LUT、均188 FF，无DSP/RAM/latch/blackbox。10ns内部OOC WNS +7.047/+6.970ns，板卡未确认。
+
+[数值合同](docs/requant_numerics.md) · [接口与上游组装边界](docs/requant_interface.md) · [实际验证](docs/requant_validation.md) · [下一轮接续及命令/修复记录](docs/session_handoff_ce_requant.md)
+
+本轮没有动态scale或坐标重组，两层串联尚未完成；原引擎按tile输出，接入时需要上游按第二层row/K-group顺序组装。下一轮仅执行交接提示词2。以下保留原计算主线和历史实现入口。
+
+# 当前计算主线：group 内跨 K tile 连续脉动波前
 
 ## 整体项目盘点与团队分工
 

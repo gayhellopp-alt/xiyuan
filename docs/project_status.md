@@ -1,5 +1,11 @@
 # 项目整体状态与结构空白
 
+2026-10-14 C/E 结构增量：可综合FFN中间通路（gate/up有限坐标RAM、SiLU近似、Q16.16乘法、down动态requant）及三次原W4A8投影的完整TB闭环已实际通过group32/12自检，各18完整任务/8复位恢复；最终两配置VU9P综合/OOC、失败探针、旧基线回归及交付审计完整退出0。见 [当前结构状态](ce_structural_status.md)、[FFN接口](ffn_interface.md)、[FFN数值](ffn_numerics.md)、[FFN实际验证](ffn_validation.md)、[接续](session_handoff_ce_ffn.md)。有效槽独立变体也已完整通过本轮器件和回归收尾，FFN仍保留原wave基线。输出FIFO/重叠后置；完整Transformer的RMSNorm/残差/RoPE/Attention/Softmax和队友统一任务/存储集成仍待完成。以下原盘点为历史快照。
+
+2026-10-13 后续 C/E 增量：动态scale/有限同步group Buffer与两层W4A8坐标组装TB已实现，完整自检/复位恢复/失败探针/VU9P综合OOC及旧基线回归退出0。当前工具结果见 [动态实际验证](dynamic_validation.md)，接口与数值见 [动态接口](dynamic_interface.md) 和 [动态数值](dynamic_numerics.md)；统一DMA/两层系统RTL与FFN仍不在本轮范围。以下原盘点及外部scale记录保留为历史快照。
+
+2026-10-13 C/E 增量：外部 scale 的独立 [requant 基线](requant_validation.md) 已实现并实际通过仿真、VU9P综合/OOC；原 W4A8 八配置回归也重新执行通过。新模块还没有动态scale、tile坐标组装或两层连接。数值/接口/交付和下一轮提示词2见 [接续记录](session_handoff_ce_requant.md)。以下盘点保留为该增量前的历史快照，其中“requant尚未实现”的表述只适用于原盘点时间。
+
 本次盘点基于当前 RTL、testbench、参考模型、脚本及 build 中的工具产物。实际重新运行了 scripts/run_w4a8_wave.ps1 -AuditOnly，退出码 0，得到 W4A8_WAVE_ARTIFACT_AUDIT_PASS。本次未重新运行全套仿真或 EDA；下列仿真、综合和 OOC 数值来自通过本次审计的已有执行产物。
 
 ## 1. 项目处于哪个阶段
