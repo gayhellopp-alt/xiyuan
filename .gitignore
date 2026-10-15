@@ -4,3 +4,7 @@ build/
 *.log
 dfx_runtime.txt
 __pycache__/
+
+# Original teammate delivery preserved locally; sources imported above.
+/xiyuan_BF/
+/xiyuan_BF.zip

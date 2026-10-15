@@ -1,4 +1,4 @@
-param([string]$VivadoBin = "D:\Xilinx\2025.2\Vivado\bin")
+param([string]$VivadoBin = "E:\AMDDesignTools\2025.2\Vivado\bin")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $build = Join-Path $root "build\synth_w4a8_system"

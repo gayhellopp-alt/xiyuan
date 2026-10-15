@@ -24,7 +24,7 @@ $vec=Join-Path $root 'build\w4a8_systolic_vectors'
 if(!$Directed -and !$SynthOnly -and !$CorruptExpected){
     $baseline=Join-Path $root 'build\sim_w4a8_systolic_s4\PASS.txt'
     if(!(Test-Path -LiteralPath $baseline)){
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts\run_w4a8_systolic.ps1') -VivadoBin $VivadoBin -Python $Python
+        & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts\run_w4a8_systolic.ps1') -VivadoBin $VivadoBin -Python $Python
         if($LASTEXITCODE -ne 0){throw 'Preserved tile-drain baseline gate failed'}
     }
 }
@@ -76,7 +76,7 @@ foreach($config in $configs) {
 if(!$Directed -and !$SingleConfig -and !$CorruptExpected -and !$SynthOnly){
     $probeOut=Join-Path $root 'build\wave_negative_auto.stdout.log'
     $probeErr=Join-Path $root 'build\systolic_negative_auto.stderr.log'
-    $probe=Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @(
+    $probe=Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @(
         '-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSCommandPath+'"'),
         '-SingleConfig','-CorruptExpected','-VivadoBin',('"'+$VivadoBin+'"'),'-Python',('"'+$Python+'"')
     ) -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $probeOut -RedirectStandardError $probeErr

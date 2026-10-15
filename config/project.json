@@ -215,5 +215,23 @@
     "part": "xcvu9p-flga2104-2L-e",
     "part_status": "temporary evaluation; board unspecified",
     "clock_period_ns": 10
+  },
+  "w4a8_team": {
+    "top": "w4a8_team_top",
+    "host_descriptor": "task_desc_pkg::task_desc_t",
+    "capacity_sidebands": [
+      "a_bytes",
+      "w_bytes",
+      "sx_bytes",
+      "sw_bytes",
+      "y_bytes"
+    ],
+    "address_bits": 32,
+    "compute_core": "w4a8_wave",
+    "task_control": "single active task; held completion",
+    "completion_fence": "all AXI write responses drained",
+    "validation_script": "scripts/run_team_integration.ps1",
+    "unified_ffn": false,
+    "attention_integrated": false
   }
 }

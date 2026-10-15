@@ -1,5 +1,7 @@
 # 当前 C/E：先跑通小型 FFN 结构
 
+> 2026-10-15 三人工作已整合：A/D 最新控制与软件、B/F 存储/KV、主目录 C/E 更新已汇入本地整合分支。新增统一 AXI 单层入口与完整回归脚本，七类回归全部通过。完整 FFN/Attention 任务图仍待对接；旧段落为原阶段记录。见[三人整合说明](docs/team_integration.md)。
+
 新增可综合 `ffn_bridge`：两个有限同步RAM按坐标组装gate/up，执行Q16.16 SiLU近似与逐元素乘法，再按down的row/K-group进行动态requant，输出INT8 qx及UQ4.12 sx。原W4A8投影和requant/dynamic数值保留；完整gate/up→SiLU×up→requant→down通过三投影TB逐阶段自检，group32/12各18完整任务及8阶段复位恢复。最终四配置自检/探针、两配置VU9P综合/OOC、原requant/dynamic/W4A8回归与完整交付审计均退出0。
 
 ```powershell
